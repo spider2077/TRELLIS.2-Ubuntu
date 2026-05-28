@@ -34,9 +34,29 @@ From the repository root:
 
 ```bash
 cd trellis-local-studio
+./scripts/check_gpu.sh
 ./scripts/install_system_deps.sh
+```
+
+If `conda` is missing, install Miniforge:
+
+```bash
+./scripts/install_miniforge.sh
+source "$HOME/miniforge3/etc/profile.d/conda.sh"
+```
+
+Install CUDA Toolkit 12.4 if `nvcc` is missing, then set:
+
+```bash
+export CUDA_HOME=/usr/local/cuda-12.4
+export PATH="$CUDA_HOME/bin:$PATH"
+export LD_LIBRARY_PATH="$CUDA_HOME/lib64:${LD_LIBRARY_PATH:-}"
+```
+
+Then install TRELLIS.2 and the app dependencies:
+
+```bash
 ./scripts/install_trellis2.sh
-python3 -m pip install -r requirements-app.txt
 ```
 
 If Ubuntu 26 has CUDA/toolchain issues, install CUDA Toolkit 12.4 exactly and ensure:

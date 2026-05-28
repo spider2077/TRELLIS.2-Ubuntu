@@ -7,6 +7,55 @@
 - Check: `nvidia-smi`.
 - Fix: install/reinstall the NVIDIA driver and reboot.
 
+
+## Local Setup Stops With `conda: command not found`
+
+- Symptom: `./scripts/install_trellis2.sh` prints `conda: command not found`.
+- Likely cause: Miniforge, Miniconda, or Anaconda is not installed or not initialized in the terminal.
+- Fix:
+
+```bash
+cd trellis-local-studio
+./scripts/install_miniforge.sh
+source "$HOME/miniforge3/etc/profile.d/conda.sh"
+./scripts/install_trellis2.sh
+```
+
+Open a new terminal after installation if `conda init bash` changed your shell startup files.
+
+## Driver Reports CUDA 13.0 But `nvcc` Is Missing
+
+- Symptom: `nvidia-smi` shows `CUDA Version: 13.0`, but `check_gpu.sh` says `nvcc not found`.
+- Likely cause: the NVIDIA driver is installed, but the CUDA Toolkit compiler is not installed.
+- Important: the CUDA version shown by `nvidia-smi` is the maximum driver-supported runtime, not proof that the CUDA Toolkit exists.
+- Fix: install CUDA Toolkit 12.4, then set:
+
+```bash
+export CUDA_HOME=/usr/local/cuda-12.4
+export PATH="$CUDA_HOME/bin:$PATH"
+export LD_LIBRARY_PATH="$CUDA_HOME/lib64:${LD_LIBRARY_PATH:-}"
+```
+
+## App Fails With `No module named uvicorn`
+
+- Symptom: `./scripts/run_app.sh` prints `/usr/bin/python3: No module named uvicorn` or a missing FastAPI/Uvicorn error.
+- Likely cause: the app was started with system Python, or app dependencies were not installed because TRELLIS.2 setup stopped earlier.
+- Fix:
+
+```bash
+cd trellis-local-studio
+source "$HOME/miniforge3/etc/profile.d/conda.sh"
+conda activate trellis2
+./scripts/install_app_deps.sh
+./scripts/run_app.sh
+```
+
+## System Python Is 3.14
+
+- Symptom: `check_gpu.sh` shows Python 3.14.
+- Likely cause: Ubuntu system Python is being used.
+- Fix: use the `trellis2` Conda environment created by TRELLIS.2 setup. TRELLIS.2 setup creates Python 3.10, which is the intended runtime for this app.
+
 ## CUDA Not Found
 
 - Symptom: CUDA extensions fail to build or `nvcc` is missing.

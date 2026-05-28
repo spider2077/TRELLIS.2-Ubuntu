@@ -12,6 +12,7 @@
 - Added sequential job queue, metadata writing, and job logs.
 - Added GPU/system inspection helpers and CUDA cache controls.
 - Added setup, run, GPU check, model download, desktop launcher, stop, and open-output scripts.
+- Added Miniforge and app-dependency helper scripts for local Ubuntu setup.
 - Added build, functionality, user, troubleshooting, and architecture documentation.
 
 ### Changed
@@ -25,6 +26,7 @@
 - Exposed metadata downloads for failed jobs that still write metadata.
 - Added runtime artifact ignore rules for local inputs, outputs, cache, logs, and config.
 - Updated the desktop launcher to open the local browser URL after starting the app.
+- Hardened local setup scripts so missing Conda, CUDA Toolkit/nvcc, and app dependencies produce actionable errors.
 
 ### Known Issues
 

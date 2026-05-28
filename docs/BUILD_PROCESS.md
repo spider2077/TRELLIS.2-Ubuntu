@@ -71,6 +71,24 @@ before compiling CUDA extensions.
 
 ## Conda/Mamba Setup and TRELLIS.2 Install
 
+If `conda` is not installed, install Miniforge first:
+
+```bash
+cd trellis-local-studio
+./scripts/install_miniforge.sh
+source "$HOME/miniforge3/etc/profile.d/conda.sh"
+```
+
+Confirm CUDA Toolkit is installed. `nvidia-smi` showing CUDA 13.0 only means the driver supports that runtime; `nvcc --version` must also work for CUDA extension builds.
+
+For CUDA Toolkit 12.4:
+
+```bash
+export CUDA_HOME=/usr/local/cuda-12.4
+export PATH="$CUDA_HOME/bin:$PATH"
+export LD_LIBRARY_PATH="$CUDA_HOME/lib64:${LD_LIBRARY_PATH:-}"
+```
+
 From `trellis-local-studio/`:
 
 ```bash

@@ -19,12 +19,36 @@ else
 fi
 
 echo
+echo "Checking Conda..."
+if command -v conda >/dev/null 2>&1; then
+  conda --version
+  echo "active conda env: ${CONDA_DEFAULT_ENV:-none}"
+else
+  echo "conda not found. Run ./scripts/install_miniforge.sh before installing TRELLIS.2."
+fi
+
+echo
 echo "Checking Python..."
-python3 --version
+python --version || python3 --version
+python - <<'PY'
+import sys
+major, minor = sys.version_info[:2]
+if (major, minor) != (3, 10):
+    print("WARNING: TRELLIS.2 setup creates/uses Python 3.10 in Conda. Do not use system Python for generation.")
+PY
+
+echo
+echo "Checking CUDA_HOME..."
+echo "CUDA_HOME=${CUDA_HOME:-not set}"
+if [ -n "${CUDA_HOME:-}" ] && [ -d "$CUDA_HOME" ]; then
+  echo "CUDA_HOME exists."
+else
+  echo "CUDA_HOME is missing or does not exist. CUDA Toolkit 12.4 is recommended."
+fi
 
 echo
 echo "Checking PyTorch CUDA..."
-python3 - <<'PY'
+python - <<'PY'
 try:
     import torch
 except Exception as exc:
@@ -39,4 +63,3 @@ else:
         if props.total_memory < 24 * 1024**3:
             print("WARNING: TRELLIS.2 targets at least 24 GB VRAM.")
 PY
-
