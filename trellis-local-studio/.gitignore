@@ -1,0 +1,12 @@
+config.local.json
+input/*
+output/*
+cache/*
+logs/*
+!input/.gitkeep
+!output/.gitkeep
+!cache/.gitkeep
+!logs/.gitkeep
+__pycache__/
+*.py[cod]
+
