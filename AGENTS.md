@@ -1923,3 +1923,9 @@ job.log
 ```
 
 The app runs fully locally on Ubuntu Desktop with the RTX 3090 and does not include any image creation model.
+
+## Cursor Cloud specific instructions
+
+- The full TRELLIS.2 install and real GLB generation require a visible NVIDIA/CUDA environment; `setup.sh` exits when neither `nvidia-smi` nor `rocminfo` is available.
+- In non-GPU Cursor Cloud sessions, use the lightweight Trellis Local Studio checks from `trellis-local-studio/requirements-app.txt` and the standard run commands documented in `trellis-local-studio/README.md` and `docs/BUILD_PROCESS.md`.
+- When CUDA/TRELLIS dependencies are absent, submitting a job still verifies upload validation, image normalization, queueing, metadata, and failure reporting; model loading is expected to fail until the target GPU environment is installed.
