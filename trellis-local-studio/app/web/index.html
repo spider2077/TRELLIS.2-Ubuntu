@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trellis Local Studio</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <h1>Trellis Local Studio</h1>
+        <p class="tagline">Local image-to-3D for TRELLIS.2</p>
+        <nav>
+          <button data-page="dashboard" class="active">Dashboard</button>
+          <button data-page="generation">New Generation</button>
+          <button data-page="jobs">Job Queue</button>
+          <button data-page="results">Results</button>
+          <button data-page="system">System / GPU</button>
+          <button data-page="settings">Settings</button>
+          <button data-page="logs">Logs</button>
+          <button data-page="help">Help</button>
+        </nav>
+      </aside>
+
+      <main>
+        <header class="topbar">
+          <div>
+            <strong id="status-pill">Checking...</strong>
+            <span id="model-status">Model status unknown</span>
+          </div>
+          <div id="gpu-summary">GPU: checking...</div>
+        </header>
+
+        <section id="dashboard" class="page active">
+          <div class="hero">
+            <h2>Generate GLB assets from your own images</h2>
+            <p>
+              This app is image-to-3D only. It does not create input images from
+              text prompts and does not include text-to-image generation.
+            </p>
+            <button class="primary" data-page-link="generation">New Generation</button>
+          </div>
+          <div class="grid">
+            <article class="card">
+              <h3>App Status</h3>
+              <pre id="health-output">Loading...</pre>
+            </article>
+            <article class="card">
+              <h3>Recent Jobs</h3>
+              <div id="recent-jobs"></div>
+            </article>
+          </div>
+        </section>
+
+        <section id="generation" class="page">
+          <h2>New Generation</h2>
+          <p class="notice">
+            TRELLIS.2 is single-image based. Front/back mode stores both images
+            and generates from the selected primary image only.
+          </p>
+          <form id="job-form" class="card form-card">
+            <label>
+              Generation mode
+              <select name="mode" id="mode">
+                <option value="single">Single Image</option>
+                <option value="front_back">Front / Back Pair</option>
+                <option value="batch">Batch Folder / Multiple Images</option>
+              </select>
+            </label>
+
+            <label>
+              Primary/front image
+              <input type="file" name="image" id="image" accept=".png,.jpg,.jpeg,.webp" required multiple />
+            </label>
+            <img id="image-preview" class="preview hidden" alt="Input preview" />
+
+            <div id="front-back-panel" class="nested hidden">
+              <label>
+                Back image
+                <input type="file" name="back_image" id="back-image" accept=".png,.jpg,.jpeg,.webp" />
+              </label>
+              <label>
+                Generate from
+                <select name="primary_image">
+                  <option value="front">Front image</option>
+                  <option value="back">Back image</option>
+                </select>
+              </label>
+              <p class="small">
+                This is not native multi-view fusion. The secondary image is saved
+                for reference unless a future verified module is added.
+              </p>
+            </div>
+
+            <label>
+              Quality preset
+              <select name="preset" id="preset"></select>
+              <span id="preset-description" class="small"></span>
+            </label>
+
+            <details>
+              <summary>Advanced export options</summary>
+              <div class="advanced-grid">
+                <label>Output basename <input name="output_basename" placeholder="output" /></label>
+                <label>Decimation target <input name="decimation_target" type="number" min="50000" max="8000000" /></label>
+                <label>Texture size
+                  <select name="texture_size">
+                    <option value="">Preset default</option>
+                    <option>1024</option>
+                    <option>2048</option>
+                    <option>4096</option>
+                    <option>8192</option>
+                  </select>
+                </label>
+                <label>Remesh <input name="remesh" type="checkbox" checked /></label>
+                <label>Remesh band <input name="remesh_band" type="number" min="0" value="1" /></label>
+                <label>Remesh project <input name="remesh_project" type="number" step="0.1" value="0" /></label>
+                <label>Use WebP extension <input name="extension_webp" type="checkbox" checked /></label>
+                <label>Render preview <input name="render_preview" type="checkbox" checked /></label>
+                <label>Preview FPS <input name="preview_fps" type="number" min="10" max="30" value="15" /></label>
+                <label>Preview seconds <input name="preview_turntable_seconds" type="number" min="3" max="20" value="6" /></label>
+              </div>
+              <p class="warning">
+                8192 textures and very high decimation targets may exceed RTX
+                3090 VRAM. Use Balanced if generation fails.
+              </p>
+            </details>
+
+            <div class="actions">
+              <button class="primary" type="submit">Generate 3D Model</button>
+              <button type="reset">Reset</button>
+            </div>
+          </form>
+        </section>
+
+        <section id="jobs" class="page">
+          <h2>Job Queue</h2>
+          <div id="jobs-table"></div>
+        </section>
+
+        <section id="results" class="page">
+          <h2>Results / History</h2>
+          <div id="results-list"></div>
+        </section>
+
+        <section id="system" class="page">
+          <h2>System / GPU Info</h2>
+          <div class="actions">
+            <button id="refresh-system">Refresh system info</button>
+            <button id="preload-model">Preload model</button>
+            <button id="unload-model">Unload model</button>
+            <button id="clear-cache">Clear CUDA cache</button>
+          </div>
+          <pre id="system-output">Loading...</pre>
+        </section>
+
+        <section id="settings" class="page">
+          <h2>Settings</h2>
+          <div class="card">
+            <p>Settings are local-only and environment-backed in this first slice.</p>
+            <ul>
+              <li>Default host: <code>127.0.0.1</code></li>
+              <li>Default port: <code>7860</code></li>
+              <li>Default preset: Balanced</li>
+              <li>Output folder: <code>trellis-local-studio/output</code></li>
+              <li>Model: <code>microsoft/TRELLIS.2-4B</code></li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="logs" class="page">
+          <h2>Logs / Troubleshooting</h2>
+          <label>
+            Select job
+            <select id="log-job-select"></select>
+          </label>
+          <pre id="log-output">Select a job to view logs.</pre>
+        </section>
+
+        <section id="help" class="page">
+          <h2>Help / Usage</h2>
+          <div class="card">
+            <ol>
+              <li>Start the app with <code>./scripts/run_app.sh</code>.</li>
+              <li>Open <code>http://127.0.0.1:7860</code>.</li>
+              <li>Upload an existing PNG, JPG, JPEG, or WEBP image.</li>
+              <li>Choose Balanced for normal RTX 3090 use.</li>
+              <li>Click Generate 3D Model and wait for the queued job.</li>
+              <li>Download <code>output.glb</code> from the completed job.</li>
+              <li>Import the GLB into Blender or Unity with a GLB importer.</li>
+            </ol>
+            <p>
+              Front/back pair mode is organizational: choose the primary image.
+              TRELLIS.2 does not natively fuse both views in this app.
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
+

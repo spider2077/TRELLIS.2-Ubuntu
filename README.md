@@ -1,3 +1,28 @@
+# Trellis Local Studio Work
+
+This repository now includes an Ubuntu Desktop local app scaffold in `trellis-local-studio/` for running TRELLIS.2 image-to-3D generation locally on an NVIDIA RTX 3090-class workstation.
+
+Important scope:
+
+- This app uses existing user-provided images as input.
+- This app does not create images from text prompts.
+- This app does not include integrated text-to-image generation.
+- The default app bind address is local-only: `127.0.0.1`.
+
+Start here:
+
+- `AGENTS.md` — canonical build specification for coding agents.
+- `CLAUDE.md` — Claude Code entry point pointing to `AGENTS.md`.
+- `trellis-local-studio/README.md` — app install and run summary.
+- `docs/BUILD_PROCESS.md` — detailed build process.
+- `docs/FUNCTIONALITY.md` — implemented features and limitations.
+- `docs/USER_GUIDE.md` — step-by-step usage.
+- `docs/TROUBLESHOOTING.md` — common CUDA/GPU/app fixes.
+- `docs/ARCHITECTURE.md` — internal app design.
+- `docs/CHANGELOG.md` — project changelog.
+
+---
+
 ![](assets/teaser.webp)
 
 # Native and Compact Structured Latents for 3D Generation
