@@ -30,33 +30,40 @@ The app scaffold is ready for environment-level testing on a CUDA workstation. F
 
 ## Install Summary
 
-From the repository root:
+From the repository root, the easiest path is the bootstrap script:
 
 ```bash
 cd trellis-local-studio
-./scripts/check_gpu.sh
-./scripts/install_system_deps.sh
+./scripts/bootstrap_local.sh --run
 ```
 
-If `conda` is missing, install Miniforge:
+The bootstrap script installs system dependencies, installs/loads Miniforge, checks CUDA Toolkit/nvcc, installs TRELLIS.2 dependencies, installs app dependencies, runs diagnostics, and starts the app when `--run` is provided.
+
+If it stops because `nvcc` is missing, install CUDA Toolkit 12.4, then rerun bootstrap:
 
 ```bash
-./scripts/install_miniforge.sh
-source "$HOME/miniforge3/etc/profile.d/conda.sh"
-```
+cd /tmp
+wget https://developer.download.nvidia.com/compute/cuda/12.4.1/local_installers/cuda_12.4.1_550.54.15_linux.run
+sudo sh cuda_12.4.1_550.54.15_linux.run --silent --toolkit --override
 
-Install CUDA Toolkit 12.4 if `nvcc` is missing, then set:
-
-```bash
+cd /path/to/TRELLIS-2-Ubuntu/trellis-local-studio
 export CUDA_HOME=/usr/local/cuda-12.4
 export PATH="$CUDA_HOME/bin:$PATH"
 export LD_LIBRARY_PATH="$CUDA_HOME/lib64:${LD_LIBRARY_PATH:-}"
+./scripts/bootstrap_local.sh --run
 ```
 
-Then install TRELLIS.2 and the app dependencies:
+Manual setup scripts are also available:
 
 ```bash
+./scripts/check_gpu.sh
+./scripts/install_system_deps.sh
+./scripts/install_miniforge.sh
+source "$HOME/miniforge3/etc/profile.d/conda.sh"
 ./scripts/install_trellis2.sh
+conda activate trellis2
+./scripts/install_app_deps.sh
+./scripts/run_app.sh
 ```
 
 If Ubuntu 26 has CUDA/toolchain issues, install CUDA Toolkit 12.4 exactly and ensure:

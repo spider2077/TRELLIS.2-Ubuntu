@@ -2,8 +2,19 @@
 
 ## Start the App
 
+First-time setup and run:
+
 ```bash
 cd trellis-local-studio
+./scripts/bootstrap_local.sh --run
+```
+
+After setup is complete, start the app later with:
+
+```bash
+cd trellis-local-studio
+source "$HOME/miniforge3/etc/profile.d/conda.sh"
+conda activate trellis2
 ./scripts/run_app.sh
 ```
 

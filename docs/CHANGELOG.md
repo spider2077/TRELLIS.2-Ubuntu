@@ -13,6 +13,7 @@
 - Added GPU/system inspection helpers and CUDA cache controls.
 - Added setup, run, GPU check, model download, desktop launcher, stop, and open-output scripts.
 - Added Miniforge and app-dependency helper scripts for local Ubuntu setup.
+- Added `bootstrap_local.sh` to chain local setup and optionally start the app.
 - Added build, functionality, user, troubleshooting, and architecture documentation.
 
 ### Changed

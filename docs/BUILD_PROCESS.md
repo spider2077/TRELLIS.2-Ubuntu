@@ -28,6 +28,24 @@ python3 -m venv /tmp/trellis-local-studio-venv
 
 The direct `pip --user` install was used only for lightweight FastAPI validation.
 
+
+## One-Command Local Bootstrap
+
+For local Ubuntu setup, use:
+
+```bash
+cd trellis-local-studio
+./scripts/bootstrap_local.sh --run
+```
+
+The bootstrap script performs the normal setup sequence and stops with CUDA Toolkit 12.4 instructions if `nvcc` is not available.
+
+Use `--skip-system-deps` if apt dependencies are already installed:
+
+```bash
+./scripts/bootstrap_local.sh --skip-system-deps --run
+```
+
 ## System Preparation
 
 ```bash
