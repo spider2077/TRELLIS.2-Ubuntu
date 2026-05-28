@@ -20,7 +20,11 @@
 
 ### Fixed
 
-- Not applicable yet.
+- Preserved the Custom preset label when users choose Custom without overriding every field.
+- Cleaned partial job folders when request validation raises an HTTP error.
+- Exposed metadata downloads for failed jobs that still write metadata.
+- Added runtime artifact ignore rules for local inputs, outputs, cache, logs, and config.
+- Updated the desktop launcher to open the local browser URL after starting the app.
 
 ### Known Issues
 

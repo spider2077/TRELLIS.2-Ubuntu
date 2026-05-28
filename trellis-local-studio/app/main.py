@@ -148,6 +148,9 @@ async def create_job(
             preview_fps=preview_fps,
             preview_turntable_seconds=preview_turntable_seconds,
         )
+    except HTTPException:
+        shutil.rmtree(job_dir, ignore_errors=True)
+        raise
     except InvalidImageError as exc:
         shutil.rmtree(job_dir, ignore_errors=True)
         raise HTTPException(status_code=400, detail=str(exc)) from exc

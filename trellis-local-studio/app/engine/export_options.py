@@ -81,7 +81,10 @@ def build_export_options(preset: str = "balanced", **overrides: Any) -> ExportOp
 
     preset_key = (preset or "balanced").strip().lower()
     base = PRESETS.get(preset_key, PRESETS["balanced"])
-    options = replace(base, preset=preset_key if preset_key in PRESETS else "balanced")
+    if preset_key == "custom":
+        options = replace(base, preset="custom")
+    else:
+        options = replace(base, preset=preset_key if preset_key in PRESETS else "balanced")
 
     typed_overrides: dict[str, Any] = {}
     for key, value in overrides.items():

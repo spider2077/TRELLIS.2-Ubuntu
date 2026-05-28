@@ -88,7 +88,9 @@ class JobWorker:
             log(f"Job failed: {exc}")
             metadata = self._metadata(job_id)
             metadata["error"] = str(exc)
-            (job.job_dir / "metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+            metadata_path = job.job_dir / "metadata.json"
+            metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+            self.store.update(job_id, metadata_path=metadata_path)
 
     def _metadata(self, job_id: str) -> dict[str, Any]:
         job = self.store.get(job_id)

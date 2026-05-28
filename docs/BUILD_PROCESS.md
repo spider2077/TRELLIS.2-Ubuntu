@@ -13,7 +13,20 @@ git checkout -b cursor/trellis-local-studio-scaffold-3e3d
 
 The app scaffold directories were created under `trellis-local-studio/`, with documentation under `docs/`.
 
-No TRELLIS.2 dependency installation was run in this cloud environment because CUDA/GPU validation must happen on the target RTX 3090 workstation.
+No TRELLIS.2 CUDA dependency installation was run in this cloud environment because GPU validation must happen on the target RTX 3090 workstation. Lightweight app dependencies were installed for API smoke checks with:
+
+```bash
+python3 -m pip install --user -r trellis-local-studio/requirements-app.txt
+```
+
+A temporary virtualenv attempt failed because `python3.12-venv` is not installed in the cloud image:
+
+```bash
+python3 -m venv /tmp/trellis-local-studio-venv
+# error: ensurepip is not available; install python3.12-venv
+```
+
+The direct `pip --user` install was used only for lightweight FastAPI validation.
 
 ## System Preparation
 

@@ -14,7 +14,7 @@ cat > "$DESKTOP_FILE" <<EOF
 Type=Application
 Name=Trellis Local Studio
 Comment=Local TRELLIS.2 image-to-3D generation
-Exec=bash -lc 'cd "$APP_ROOT" && ./scripts/run_app.sh'
+Exec=bash -lc 'cd "$APP_ROOT" && ./scripts/run_app.sh & sleep 3 && xdg-open http://127.0.0.1:7860'
 Terminal=true
 Categories=Graphics;3DGraphics;
 EOF
