@@ -11,14 +11,20 @@ export CUDA_HOME="${CUDA_HOME:-/usr/local/cuda-12.4}"
 export PATH="$CUDA_HOME/bin:$PATH"
 export LD_LIBRARY_PATH="$CUDA_HOME/lib64:${LD_LIBRARY_PATH:-}"
 
-if ! command -v conda >/dev/null 2>&1; then
-  for conda_sh in     "$HOME/miniforge3/etc/profile.d/conda.sh"     "$HOME/miniconda3/etc/profile.d/conda.sh"     "$HOME/anaconda3/etc/profile.d/conda.sh"; do
-    if [ -f "$conda_sh" ]; then
-      # shellcheck disable=SC1090
-      . "$conda_sh"
-      break
-    fi
-  done
+CONDA_SH=""
+for candidate in \
+  "$HOME/miniforge3/etc/profile.d/conda.sh" \
+  "$HOME/miniconda3/etc/profile.d/conda.sh" \
+  "$HOME/anaconda3/etc/profile.d/conda.sh"; do
+  if [ -f "$candidate" ]; then
+    CONDA_SH="$candidate"
+    break
+  fi
+done
+
+if [ -n "$CONDA_SH" ]; then
+  # shellcheck disable=SC1090
+  . "$CONDA_SH"
 fi
 
 if ! command -v conda >/dev/null 2>&1; then

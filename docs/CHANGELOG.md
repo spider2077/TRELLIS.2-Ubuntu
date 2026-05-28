@@ -27,6 +27,7 @@
 - Added runtime artifact ignore rules for local inputs, outputs, cache, logs, and config.
 - Updated the desktop launcher to open the local browser URL after starting the app.
 - Hardened local setup scripts so missing Conda, CUDA Toolkit/nvcc, and app dependencies produce actionable errors.
+- Fixed `install_trellis2.sh` to source Conda shell hooks before upstream `setup.sh` calls `conda activate`.
 
 ### Known Issues
 

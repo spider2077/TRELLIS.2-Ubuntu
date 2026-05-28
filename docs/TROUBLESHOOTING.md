@@ -120,6 +120,32 @@ conda activate trellis2
 - Likely cause: newer system compiler/libraries than upstream tested.
 - Fix: use Conda isolation, CUDA Toolkit 12.4, and the exact TRELLIS.2 setup flags in `docs/BUILD_PROCESS.md`.
 
+
+## `CondaError: Run 'conda init' before 'conda activate'`
+
+- Symptom: `install_trellis2.sh` creates the `trellis2` environment, then upstream `setup.sh` fails at `conda activate trellis2`.
+- Likely cause: Conda's shell hook was not sourced inside the installer process.
+- Fix after pulling the latest script:
+
+```bash
+cd trellis-local-studio
+source "$HOME/miniforge3/etc/profile.d/conda.sh"
+./scripts/install_trellis2.sh
+```
+
+If you cannot pull the latest script yet, run the upstream setup from the repository root in the same shell where `conda.sh` is sourced:
+
+```bash
+source "$HOME/miniforge3/etc/profile.d/conda.sh"
+cd ..
+export CUDA_HOME=/usr/local/cuda-12.4
+export PATH="$CUDA_HOME/bin:$PATH"
+export LD_LIBRARY_PATH="$CUDA_HOME/lib64:${LD_LIBRARY_PATH:-}"
+. ./setup.sh --new-env --basic --flash-attn --nvdiffrast --nvdiffrec --cumesh --o-voxel --flexgemm
+conda activate trellis2
+python -m pip install -r trellis-local-studio/requirements-app.txt
+```
+
 ## Conda Environment Issue
 
 - Symptom: `conda activate trellis2` fails or packages import from the wrong environment.
