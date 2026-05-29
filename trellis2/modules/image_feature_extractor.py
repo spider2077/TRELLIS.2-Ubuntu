@@ -69,6 +69,17 @@ class DinoV3FeatureExtractor:
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
 
+    def _transformer_layers(self):
+        # transformers <=4.x exposed layers on the root model; 5.x nests them in `.model`.
+        if hasattr(self.model, "layer"):
+            return self.model.layer
+        encoder = getattr(self.model, "model", None)
+        if encoder is not None and hasattr(encoder, "layer"):
+            return encoder.layer
+        raise AttributeError(
+            "Unsupported transformers DINOv3 layout: expected `.layer` or `.model.layer`."
+        )
+
     def to(self, device):
         self.model.to(device)
 
@@ -83,7 +94,7 @@ class DinoV3FeatureExtractor:
         hidden_states = self.model.embeddings(image, bool_masked_pos=None)
         position_embeddings = self.model.rope_embeddings(image)
 
-        for i, layer_module in enumerate(self.model.layer):
+        for layer_module in self._transformer_layers():
             hidden_states = layer_module(
                 hidden_states,
                 position_embeddings=position_embeddings,

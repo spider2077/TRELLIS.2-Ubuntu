@@ -7,21 +7,38 @@ from typing import Any
 
 
 TEXTURE_SIZES = {1024, 2048, 4096, 8192}
+GENERATION_RESOLUTIONS = {512, 1024, 1536}
 MIN_DECIMATION_TARGET = 50_000
 MAX_DECIMATION_TARGET = 8_000_000
+
+PIPELINE_TYPE_BY_RESOLUTION = {
+    512: "512",
+    1024: "1024_cascade",
+    1536: "1536_cascade",
+}
+
+
+def pipeline_type_for_resolution(resolution: int) -> str:
+    """Map UI resolution to the official TRELLIS.2 pipeline_type value."""
+
+    try:
+        return PIPELINE_TYPE_BY_RESOLUTION[int(resolution)]
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError("pipeline_resolution must be one of 512, 1024, or 1536") from exc
 
 
 @dataclass(frozen=True)
 class ExportOptions:
-    """GLB export and optional preview settings."""
+    """Generation, GLB export, and optional preview settings."""
 
     preset: str = "balanced"
+    pipeline_resolution: int = 1024
     decimation_target: int = 1_000_000
     texture_size: int = 4096
     remesh: bool = True
     remesh_band: int = 1
     remesh_project: float = 0
-    extension_webp: bool = True
+    extension_webp: bool = False
     render_preview: bool = True
     preview_fps: int = 15
     preview_turntable_seconds: int = 6
@@ -34,18 +51,21 @@ class ExportOptions:
 PRESETS: dict[str, ExportOptions] = {
     "draft": ExportOptions(
         preset="draft",
+        pipeline_resolution=512,
         decimation_target=250_000,
         texture_size=2048,
         render_preview=False,
     ),
-    "balanced": ExportOptions(preset="balanced"),
+    "balanced": ExportOptions(preset="balanced", pipeline_resolution=1024),
     "high": ExportOptions(
         preset="high",
+        pipeline_resolution=1536,
         decimation_target=2_000_000,
         texture_size=4096,
     ),
     "experimental": ExportOptions(
         preset="experimental",
+        pipeline_resolution=1536,
         decimation_target=4_000_000,
         texture_size=8192,
     ),
@@ -60,11 +80,11 @@ PRESET_LABELS = {
 }
 
 PRESET_DESCRIPTIONS = {
-    "draft": "Quick test, smaller output.",
-    "balanced": "Recommended default for RTX 3090.",
-    "high": "Better output, slower and heavier.",
-    "experimental": "Maximum settings; may fail or run out of VRAM.",
-    "custom": "Manual export settings.",
+    "draft": "512 mesh generation for quick tests.",
+    "balanced": "1024 cascade generation; recommended default for RTX 3090.",
+    "high": "1536 cascade generation plus 4096 export textures; closest to official demo mesh detail.",
+    "experimental": "1536 cascade with maximum export settings; may fail or run out of VRAM.",
+    "custom": "Manual generation and export settings.",
 }
 
 
@@ -90,7 +110,14 @@ def build_export_options(preset: str = "balanced", **overrides: Any) -> ExportOp
     for key, value in overrides.items():
         if value in (None, ""):
             continue
-        if key in {"decimation_target", "texture_size", "remesh_band", "preview_fps", "preview_turntable_seconds"}:
+        if key in {
+            "pipeline_resolution",
+            "decimation_target",
+            "texture_size",
+            "remesh_band",
+            "preview_fps",
+            "preview_turntable_seconds",
+        }:
             typed_overrides[key] = int(value)
         elif key == "remesh_project":
             typed_overrides[key] = float(value)
@@ -110,6 +137,8 @@ def build_export_options(preset: str = "balanced", **overrides: Any) -> ExportOp
 
 def validate_export_options(options: ExportOptions) -> list[str]:
     errors: list[str] = []
+    if options.pipeline_resolution not in GENERATION_RESOLUTIONS:
+        errors.append("pipeline_resolution must be one of 512, 1024, or 1536")
     if not MIN_DECIMATION_TARGET <= options.decimation_target <= MAX_DECIMATION_TARGET:
         errors.append("decimation_target must be between 50,000 and 8,000,000")
     if options.texture_size not in TEXTURE_SIZES:
@@ -143,6 +172,7 @@ def options_payload() -> dict[str, Any]:
             }
         ],
         "limits": {
+            "pipeline_resolution": sorted(GENERATION_RESOLUTIONS),
             "decimation_target": [MIN_DECIMATION_TARGET, MAX_DECIMATION_TARGET],
             "texture_size": sorted(TEXTURE_SIZES),
             "preview_fps": [10, 30],

@@ -19,6 +19,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--input", required=True, type=Path, help="Input image path.")
     parser.add_argument("--output", required=True, type=Path, help="Output job folder.")
     parser.add_argument("--preset", default="balanced", help="draft, balanced, high, experimental, or custom.")
+    parser.add_argument("--pipeline-resolution", type=int, choices=[512, 1024, 1536])
     parser.add_argument("--decimation-target", type=int)
     parser.add_argument("--texture-size", type=int)
     parser.add_argument("--no-preview", action="store_true", help="Skip preview video rendering.")
@@ -34,6 +35,7 @@ def main() -> None:
 
     options = build_export_options(
         preset=args.preset,
+        pipeline_resolution=args.pipeline_resolution,
         output_basename="output",
         decimation_target=args.decimation_target,
         texture_size=args.texture_size,

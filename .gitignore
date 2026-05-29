@@ -205,3 +205,15 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Trellis Local Studio runtime artifacts (keep folder placeholders only)
+trellis-local-studio/config.local.json
+trellis-local-studio/.cuda-patches/
+trellis-local-studio/input/*
+trellis-local-studio/output/*
+trellis-local-studio/cache/*
+trellis-local-studio/logs/*
+!trellis-local-studio/input/.gitkeep
+!trellis-local-studio/output/.gitkeep
+!trellis-local-studio/cache/.gitkeep
+!trellis-local-studio/logs/.gitkeep

@@ -8,8 +8,13 @@ REPO_ROOT="$(cd "$APP_ROOT/.." && pwd)"
 cd "$REPO_ROOT"
 
 export CUDA_HOME="${CUDA_HOME:-/usr/local/cuda-12.4}"
+export SYSTEM_CUDA_HOME="$CUDA_HOME"
 export PATH="$CUDA_HOME/bin:$PATH"
 export LD_LIBRARY_PATH="$CUDA_HOME/lib64:${LD_LIBRARY_PATH:-}"
+export CC="${CC:-gcc-13}"
+export CXX="${CXX:-g++-13}"
+export CUDAHOSTCXX="${CUDAHOSTCXX:-g++-13}"
+export NVCC_PREPEND_FLAGS="${NVCC_PREPEND_FLAGS:--allow-unsupported-compiler}"
 
 CONDA_SH=""
 for candidate in \
@@ -48,9 +53,26 @@ if ! command -v nvcc >/dev/null 2>&1; then
   exit 1
 fi
 
+# shellcheck disable=SC1091
+source "$APP_ROOT/scripts/prepare_cuda_glibc_patch.sh"
+
 echo "Installing TRELLIS.2 dependencies from current repository checkout."
 echo "CUDA_HOME=$CUDA_HOME"
-. ./setup.sh --new-env --basic --flash-attn --nvdiffrast --nvdiffrec --cumesh --o-voxel --flexgemm
+
+SETUP_ARGS=(--basic --flash-attn --nvdiffrast --nvdiffrec --cumesh --o-voxel --flexgemm)
+if conda env list | awk '{print $1}' | grep -qx trellis2; then
+  echo "Reusing existing trellis2 conda environment."
+  conda activate trellis2
+  conda install -y zlib >/dev/null 2>&1 || true
+  if ! python -c "import torch" >/dev/null 2>&1; then
+    echo "Installing PyTorch into existing trellis2 environment..."
+    pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124
+  fi
+else
+  SETUP_ARGS=(--new-env "${SETUP_ARGS[@]}")
+fi
+
+. ./setup.sh "${SETUP_ARGS[@]}"
 
 echo "Installing Trellis Local Studio app dependencies."
 python -m pip install -r "$APP_ROOT/requirements-app.txt"

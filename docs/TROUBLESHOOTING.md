@@ -50,6 +50,20 @@ conda activate trellis2
 ./scripts/run_app.sh
 ```
 
+## Job Fails With `No module named 'trellis2'`
+
+- Symptom: a generation job starts, then fails while loading the model with `No module named 'trellis2'`.
+- Likely cause: the app process could not see the upstream TRELLIS.2 Python package in the repository root.
+- Fix: pull the latest app code, restart the app, then retry:
+
+```bash
+cd trellis-local-studio
+./scripts/stop_app.sh
+./scripts/run_app.sh
+```
+
+The app adds the parent repository root to `PYTHONPATH` automatically. If you start Uvicorn manually, run it from `trellis-local-studio` after activating `conda activate trellis2`.
+
 ## System Python Is 3.14
 
 - Symptom: `check_gpu.sh` shows Python 3.14.
@@ -88,6 +102,35 @@ conda activate trellis2
 - Check: `python3 scripts/download_model.py`.
 - Fix: verify network access and Hugging Face cache permissions.
 
+## Gated Hugging Face Model / `401 Client Error`
+
+- Symptom: job fails while loading the model with `You are trying to access a gated repo`, `401 Client Error`, or `403 Client Error`.
+- Likely cause: TRELLIS.2 depends on gated Hugging Face models and access has not been approved yet. Common blockers:
+  - `facebook/dinov3-vitl16-pretrain-lvd1689m`
+  - `briaai/RMBG-2.0` (background removal)
+- Fix:
+
+```bash
+# 1. In a browser, sign in and request access on BOTH pages:
+#    https://huggingface.co/facebook/dinov3-vitl16-pretrain-lvd1689m
+#    https://huggingface.co/briaai/RMBG-2.0
+
+cd trellis-local-studio
+source "$HOME/miniforge3/etc/profile.d/conda.sh"
+conda activate trellis2
+hf auth login
+./scripts/setup_huggingface.sh --check --download
+./scripts/stop_app.sh
+./scripts/run_app.sh
+```
+
+- Non-interactive option: create a read token at https://huggingface.co/settings/tokens then run:
+
+```bash
+HF_TOKEN=your_read_token hf auth login --token "$HF_TOKEN"
+./scripts/setup_huggingface.sh --check --download
+```
+
 ## Hugging Face Cache Problems
 
 - Symptom: model downloads repeatedly or cannot write cache.
@@ -100,6 +143,30 @@ conda activate trellis2
 - Symptom: upload returns unsupported format or invalid image.
 - Likely cause: non-image file or unsupported extension.
 - Fix: use `.png`, `.jpg`, `.jpeg`, or `.webp`.
+
+## `'DINOv3ViTModel' object has no attribute 'layer'`
+
+- Symptom: generation fails during TRELLIS.2 inference after models load.
+- Likely cause: newer `transformers` (5.x) changed the DINOv3 module layout.
+- Fix: pull the latest app/TRELLIS.2 code, restart the app, and retry. The feature extractor now supports both `.layer` and `.model.layer`.
+
+## GLB Export Fails With `PIL._webp` / `HAVE_WEBPANIM`
+
+- Symptom: generation completes, then export fails with `module 'PIL._webp' has no attribute 'HAVE_WEBPANIM'`.
+- Likely cause: `pillow-simd` was installed and overrides standard Pillow, breaking WebP GLB export.
+- Fix:
+
+```bash
+source "$HOME/miniforge3/etc/profile.d/conda.sh"
+conda activate trellis2
+pip uninstall -y Pillow-SIMD
+pip install --force-reinstall pillow
+cd trellis-local-studio
+./scripts/stop_app.sh
+./scripts/run_app.sh
+```
+
+Then retry the job.
 
 ## GLB Export Failure
 
@@ -119,6 +186,20 @@ conda activate trellis2
 - Symptom: packages or CUDA extensions fail during install.
 - Likely cause: newer system compiler/libraries than upstream tested.
 - Fix: use Conda isolation, CUDA Toolkit 12.4, and the exact TRELLIS.2 setup flags in `docs/BUILD_PROCESS.md`.
+
+Common Ubuntu 26 fixes used by Trellis Local Studio:
+
+```bash
+cd trellis-local-studio
+./scripts/bootstrap_local.sh --skip-system-deps --run
+```
+
+Notes:
+
+- Use `--skip-system-deps` if `sudo apt` is unavailable in the current terminal. Ensure `git`, `ffmpeg`, `build-essential`, `libjpeg-dev`, `zlib1g-dev`, `gcc-13`, and `g++-13` are already installed.
+- If bootstrap stops at `Remove existing environment?`, pull the latest scripts. The installer now reuses an existing `trellis2` environment instead of prompting.
+- If CUDA extension builds fail with `exception specification is incompatible` for `cospi` / `sinpi` / `rsqrt`, run the installer again. It applies a shadow CUDA header patch under `~/.local/share/trellis-local-studio/shadow-cuda`.
+- If `flash-attn` fails to build, the installer falls back to the official prebuilt wheel for PyTorch 2.6 + CUDA 12.4 + Python 3.10.
 
 
 ## `CondaError: Run 'conda init' before 'conda activate'`

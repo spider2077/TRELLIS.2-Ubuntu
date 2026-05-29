@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -17,6 +18,10 @@ DEFAULT_MODEL = "microsoft/TRELLIS.2-4B"
 
 APP_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = APP_ROOT.parent
+
+_repo_root_str = str(REPO_ROOT)
+if _repo_root_str not in sys.path:
+    sys.path.insert(0, _repo_root_str)
 INPUT_DIR = APP_ROOT / "input"
 OUTPUT_DIR = APP_ROOT / "output"
 CACHE_DIR = APP_ROOT / "cache"

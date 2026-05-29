@@ -6,11 +6,31 @@ set -euo pipefail
 APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$APP_ROOT"
 
+CONDA_SH=""
+for candidate in \
+  "$HOME/miniforge3/etc/profile.d/conda.sh" \
+  "$HOME/miniconda3/etc/profile.d/conda.sh" \
+  "$HOME/anaconda3/etc/profile.d/conda.sh"; do
+  if [ -f "$candidate" ]; then
+    CONDA_SH="$candidate"
+    break
+  fi
+done
+
+if [ -n "$CONDA_SH" ]; then
+  # shellcheck disable=SC1090
+  . "$CONDA_SH"
+  if [ "${CONDA_DEFAULT_ENV:-}" != "trellis2" ]; then
+    conda activate trellis2
+  fi
+fi
+
 export OPENCV_IO_ENABLE_OPENEXR=1
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 export TRELLIS_LOCAL_HOST="${TRELLIS_LOCAL_HOST:-127.0.0.1}"
 export TRELLIS_LOCAL_PORT="${TRELLIS_LOCAL_PORT:-7860}"
+export PYTHONPATH="$(cd "$APP_ROOT/.." && pwd)${PYTHONPATH:+:$PYTHONPATH}"
 
 if [ "$TRELLIS_LOCAL_HOST" = "0.0.0.0" ]; then
   echo "WARNING: LAN mode is enabled. The app will bind to 0.0.0.0."

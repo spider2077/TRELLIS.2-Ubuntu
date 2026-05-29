@@ -54,6 +54,17 @@ async function loadOptions() {
 function updatePresetDescription() {
   const selected = state.presets.find((preset) => preset.key === $("#preset").value);
   $("#preset-description").textContent = selected ? selected.description : "";
+  if (!selected) return;
+  const resolutionSelect = $("#pipeline_resolution");
+  if (resolutionSelect && !resolutionSelect.dataset.userOverride) {
+    resolutionSelect.value = String(selected.options.pipeline_resolution);
+  }
+}
+
+function markResolutionOverride() {
+  const resolutionSelect = $("#pipeline_resolution");
+  if (!resolutionSelect) return;
+  resolutionSelect.dataset.userOverride = resolutionSelect.value ? "1" : "";
 }
 
 async function refreshJobs() {
@@ -88,7 +99,7 @@ function renderJobRow(job) {
       <div>
         <strong>${escapeHtml(job.name)}</strong>
         <div><span class="status ${job.status}">${job.status}</span> ${job.progress}%</div>
-        <div class="small">Mode: ${job.mode} | Preset: ${job.preset} | Created: ${job.created_at}</div>
+        <div class="small">Mode: ${job.mode} | Preset: ${job.preset} | Resolution: ${job.settings?.pipeline_resolution || "?"} | Created: ${job.created_at}</div>
         ${job.error ? `<div class="warning">${escapeHtml(job.error)}</div>` : ""}
         ${job.warnings?.length ? `<div class="warning">${job.warnings.map(escapeHtml).join("<br>")}</div>` : ""}
       </div>
@@ -174,7 +185,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#mode").addEventListener("change", () => {
     $("#front-back-panel").classList.toggle("hidden", $("#mode").value !== "front_back");
   });
-  $("#preset").addEventListener("change", updatePresetDescription);
+  $("#preset").addEventListener("change", () => {
+    const resolutionSelect = $("#pipeline_resolution");
+    if (resolutionSelect) {
+      delete resolutionSelect.dataset.userOverride;
+    }
+    updatePresetDescription();
+  });
+  $("#pipeline_resolution")?.addEventListener("change", markResolutionOverride);
   $("#image").addEventListener("change", previewImage);
   $("#job-form").addEventListener("submit", submitJob);
   $("#refresh-system").addEventListener("click", refreshSystem);

@@ -57,6 +57,15 @@ fi
 
 # Get system information
 WORKDIR=$(pwd)
+PATCH_SCRIPT="$WORKDIR/trellis-local-studio/scripts/prepare_cuda_glibc_patch.sh"
+if [ -f "$PATCH_SCRIPT" ]; then
+  # shellcheck disable=SC1090
+  . "$PATCH_SCRIPT"
+fi
+export CC="${CC:-gcc-13}"
+export CXX="${CXX:-g++-13}"
+export CUDAHOSTCXX="${CUDAHOSTCXX:-g++-13}"
+export NVCC_PREPEND_FLAGS="${NVCC_PREPEND_FLAGS:--allow-unsupported-compiler}"
 if command -v nvidia-smi > /dev/null; then
     PLATFORM="cuda"
 elif command -v rocminfo > /dev/null; then
@@ -67,7 +76,7 @@ else
 fi
 
 if [ "$NEW_ENV" = true ] ; then
-    conda create -n trellis2 python=3.10
+    conda create -y -n trellis2 python=3.10
     conda activate trellis2
     if [ "$PLATFORM" = "cuda" ] ; then
         pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124
@@ -79,14 +88,27 @@ fi
 if [ "$BASIC" = true ] ; then
     pip install imageio imageio-ffmpeg tqdm easydict opencv-python-headless ninja trimesh transformers gradio==6.0.1 tensorboard pandas lpips zstandard
     pip install git+https://github.com/EasternJournalist/utils3d.git@9a4eb15e4021b67b12c460c7057d642626897ec8
-    sudo apt install -y libjpeg-dev
-    pip install pillow-simd
+    if ! dpkg -s libjpeg-dev >/dev/null 2>&1; then
+        sudo apt install -y libjpeg-dev
+    fi
+    export CPATH="${CONDA_PREFIX:-}/include:${CPATH:-}"
+    export LIBRARY_PATH="${CONDA_PREFIX:-}/lib:${LIBRARY_PATH:-}"
+    export CFLAGS="-I${CONDA_PREFIX:-}/include ${CFLAGS:-}"
+    export LDFLAGS="-L${CONDA_PREFIX:-}/lib ${LDFLAGS:-}"
+    # Use standard Pillow. pillow-simd can override Pillow and break WebP GLB export.
+    pip install --upgrade pillow
     pip install kornia timm
 fi
 
 if [ "$FLASHATTN" = true ] ; then
     if [ "$PLATFORM" = "cuda" ] ; then
-        pip install flash-attn==2.7.3
+        if ! python -c "import flash_attn" >/dev/null 2>&1; then
+            pip install psutil packaging
+            FLASH_ATTN_WHEEL="https://github.com/Dao-AILab/flash-attention/releases/download/v2.7.3/flash_attn-2.7.3+cu12torch2.6cxx11abiFALSE-cp310-cp310-linux_x86_64.whl"
+            if ! pip install "$FLASH_ATTN_WHEEL"; then
+                pip install flash-attn==2.7.3 --no-build-isolation
+            fi
+        fi
     elif [ "$PLATFORM" = "hip" ] ; then
         echo "[FLASHATTN] Prebuilt binaries not found. Building from source..."
         mkdir -p /tmp/extensions

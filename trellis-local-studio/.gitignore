@@ -1,4 +1,7 @@
 config.local.json
+.cuda-patches/
+
+# Runtime folders: ignore generated content, keep .gitkeep placeholders
 input/*
 output/*
 cache/*
@@ -7,6 +10,6 @@ logs/*
 !output/.gitkeep
 !cache/.gitkeep
 !logs/.gitkeep
+
 __pycache__/
 *.py[cod]
-

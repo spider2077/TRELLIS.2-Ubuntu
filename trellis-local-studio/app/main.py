@@ -104,6 +104,7 @@ async def create_job(
     mode: str = Form("single"),
     primary_image: str = Form("front"),
     preset: str = Form("balanced"),
+    pipeline_resolution: int | None = Form(None),
     output_basename: str | None = Form(None),
     decimation_target: int | None = Form(None),
     texture_size: int | None = Form(None),
@@ -137,6 +138,7 @@ async def create_job(
         image_info = normalize_image(primary_path, normalized_path)
         options = build_export_options(
             preset=preset,
+            pipeline_resolution=pipeline_resolution,
             output_basename=job_name,
             decimation_target=decimation_target,
             texture_size=texture_size,
@@ -241,6 +243,11 @@ def _settings_warnings(options: dict[str, Any], mode: str) -> list[str]:
     warnings: list[str] = []
     if not settings.local_only:
         warnings.append("LAN mode is enabled. Local-only mode is recommended by default.")
+    if options.get("pipeline_resolution") == 1536:
+        warnings.append(
+            "1536 generation resolution uses more VRAM and time than 1024. "
+            "Use High or Experimental for demo-like mesh detail."
+        )
     if options["texture_size"] == 8192 or options["decimation_target"] >= 4_000_000:
         warnings.append("8192 textures and very high decimation targets may exceed RTX 3090 VRAM.")
     if mode == "front_back":

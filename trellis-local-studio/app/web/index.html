@@ -99,6 +99,20 @@
               <span id="preset-description" class="small"></span>
             </label>
 
+            <label>
+              Generation resolution
+              <select name="pipeline_resolution" id="pipeline_resolution">
+                <option value="">Preset default</option>
+                <option value="512">512 — fast, lower mesh detail</option>
+                <option value="1024">1024 — official default (1024 cascade)</option>
+                <option value="1536">1536 — highest mesh detail (1536 cascade)</option>
+              </select>
+              <span class="small">
+                Demo-quality results usually need 1536 generation plus a clean input image
+                (centered subject, transparent PNG preferred). Export texture size is separate.
+              </span>
+            </label>
+
             <details>
               <summary>Advanced export options</summary>
               <div class="advanced-grid">
@@ -116,14 +130,20 @@
                 <label>Remesh <input name="remesh" type="checkbox" checked /></label>
                 <label>Remesh band <input name="remesh_band" type="number" min="0" value="1" /></label>
                 <label>Remesh project <input name="remesh_project" type="number" step="0.1" value="0" /></label>
-                <label>Use WebP extension <input name="extension_webp" type="checkbox" checked /></label>
+                <label>Use WebP extension <input name="extension_webp" type="checkbox" /></label>
+                <p class="small">
+                  WebP makes smaller GLB files and works in the in-app preview, but Blender
+                  often shows an untextured mesh. Leave this off for Blender, Unity, and
+                  most DCC tools. Textures are embedded inside the GLB, not saved as separate
+                  image files.
+                </p>
                 <label>Render preview <input name="render_preview" type="checkbox" checked /></label>
                 <label>Preview FPS <input name="preview_fps" type="number" min="10" max="30" value="15" /></label>
                 <label>Preview seconds <input name="preview_turntable_seconds" type="number" min="3" max="20" value="6" /></label>
               </div>
               <p class="warning">
-                8192 textures and very high decimation targets may exceed RTX
-                3090 VRAM. Use Balanced if generation fails.
+                1536 generation, 8192 textures, and very high decimation targets may exceed
+                RTX 3090 VRAM. Use Balanced or 1024 generation if a job fails.
               </p>
             </details>
 
@@ -185,11 +205,23 @@
               <li>Start the app with <code>./scripts/run_app.sh</code>.</li>
               <li>Open <code>http://127.0.0.1:7860</code>.</li>
               <li>Upload an existing PNG, JPG, JPEG, or WEBP image.</li>
-              <li>Choose Balanced for normal RTX 3090 use.</li>
+              <li>Choose Balanced for normal RTX 3090 use, or High Quality for 1536 demo-like mesh detail.</li>
               <li>Click Generate 3D Model and wait for the queued job.</li>
               <li>Download <code>output.glb</code> from the completed job.</li>
               <li>Import the GLB into Blender or Unity with a GLB importer.</li>
             </ol>
+            <p>
+              For quality closest to the official TRELLIS.2 demo, use the
+              <strong>High Quality</strong> preset or set Generation resolution to
+              <strong>1536</strong>. Use a clean PNG with a transparent background when
+              possible; demo images are curated product photos with alpha masks.
+            </p>
+            <p>
+              Textures are embedded inside the GLB, not saved as separate PNG files in the
+              job folder. For Blender, leave <strong>Use WebP extension</strong> off when
+              generating. If an older job used WebP, run
+              <code>python scripts/convert_glb_for_blender.py your-model.glb</code>.
+            </p>
             <p>
               Front/back pair mode is organizational: choose the primary image.
               TRELLIS.2 does not natively fuse both views in this app.

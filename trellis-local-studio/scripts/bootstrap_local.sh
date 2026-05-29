@@ -53,7 +53,13 @@ echo "App root: $APP_ROOT"
 if [ "$SKIP_SYSTEM_DEPS" = false ]; then
   echo
   echo "== Installing system dependencies =="
-  ./scripts/install_system_deps.sh
+  if ! ./scripts/install_system_deps.sh; then
+    echo
+    echo "Warning: system dependency install failed (sudo may be unavailable)."
+    echo "If git, ffmpeg, build tools, and libjpeg-dev are already installed,"
+    echo "rerun with: ./scripts/bootstrap_local.sh --skip-system-deps --run"
+    exit 1
+  fi
 fi
 
 echo
@@ -88,7 +94,8 @@ conda --version
 
 echo
 echo "== Checking CUDA Toolkit =="
-export CUDA_HOME="${CUDA_HOME:-/usr/local/cuda-12.4}"
+export SYSTEM_CUDA_HOME="${CUDA_HOME:-/usr/local/cuda-12.4}"
+export CUDA_HOME="$SYSTEM_CUDA_HOME"
 export PATH="$CUDA_HOME/bin:$PATH"
 export LD_LIBRARY_PATH="$CUDA_HOME/lib64:${LD_LIBRARY_PATH:-}"
 

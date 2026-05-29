@@ -11,10 +11,40 @@ from typing import Any, Callable
 from PIL import Image
 
 from app.config import DEFAULT_MODEL, REPO_ROOT
-from app.engine.export_options import ExportOptions
+from app.engine.export_options import ExportOptions, pipeline_type_for_resolution
 
 
 LogFn = Callable[[str], None]
+
+
+def webp_glb_export_supported() -> bool:
+    """Return True when Pillow can encode WebP textures for GLB export."""
+
+    try:
+        from io import BytesIO
+
+        from PIL import Image
+
+        buffer = BytesIO()
+        Image.new("RGB", (2, 2)).save(buffer, format="WEBP")
+        return True
+    except Exception:
+        return False
+
+
+def resolve_extension_webp(requested: bool, log: LogFn | None = None) -> bool:
+    """Use WebP GLB export only when requested and supported by Pillow."""
+
+    if not requested:
+        return False
+    if webp_glb_export_supported():
+        return True
+    if log:
+        log(
+            "WebP GLB export is unavailable in the current Pillow build "
+            "(often caused by pillow-simd). Exporting without WebP extension."
+        )
+    return False
 
 
 @dataclass(frozen=True)
@@ -86,15 +116,33 @@ class TrellisEngine:
             log(f"Opening normalized image: {image_path}")
             image = Image.open(image_path)
 
-            log("Running TRELLIS.2 image-to-3D generation.")
-            mesh = self.pipeline.run(image)[0]
+            pipeline_type = pipeline_type_for_resolution(options.pipeline_resolution)
+            log(
+                f"Running TRELLIS.2 image-to-3D generation "
+                f"(resolution={options.pipeline_resolution}, pipeline_type={pipeline_type})."
+            )
+            mesh = self.pipeline.run(image, pipeline_type=pipeline_type)[0]
             if hasattr(mesh, "simplify"):
                 mesh.simplify(16_777_216)  # nvdiffrast face-count limit from official examples.
 
             glb_path = job_dir / f"{options.output_basename}.glb"
+            extension_webp = resolve_extension_webp(options.extension_webp, log)
+            if extension_webp:
+                log(
+                    "Exporting with WebP textures (smaller file). "
+                    "Turn off 'Use WebP extension' for best Blender compatibility."
+                )
+            else:
+                log("Exporting with PNG/JPEG textures for Blender/DCC compatibility.")
             log(f"Exporting GLB: {glb_path}")
             glb = self._to_glb(mesh, options)
-            glb.export(str(glb_path), extension_webp=options.extension_webp)
+            glb.export(str(glb_path), extension_webp=extension_webp)
+            metadata["settings"] = {
+                **metadata.get("settings", {}),
+                **options.to_dict(),
+                "extension_webp_requested": options.extension_webp,
+                "extension_webp_used": extension_webp,
+            }
 
             preview_path = None
             if options.render_preview:
@@ -167,11 +215,25 @@ class TrellisEngine:
             log("CUDA cache clear skipped; PyTorch CUDA is not available.")
 
     def _friendly_error(self, exc: Exception) -> RuntimeError:
+        from app.utils.huggingface_auth import gated_repo_error_message
+
         message = str(exc)
+        gated_help = gated_repo_error_message(message)
+        if gated_help:
+            return RuntimeError(gated_help)
+        if "have_webpanim" in message.lower() or "pillow" in message.lower() and "_webp" in message.lower():
+            return RuntimeError(
+                "GLB export failed because the active Pillow build cannot export WebP textures. "
+                "This often happens when pillow-simd is installed. Fix with:\n"
+                "  pip uninstall -y Pillow-SIMD\n"
+                "  pip install --force-reinstall pillow\n"
+                "Then restart the app and retry."
+            )
         if "out of memory" in message.lower() or "cuda oom" in message.lower():
             return RuntimeError(
-                "CUDA out of memory. Use Draft or Balanced, lower texture size or "
-                "decimation target, close other GPU apps, then restart the app if needed."
+                "CUDA out of memory. Use Draft or Balanced, lower generation resolution "
+                "(1536 -> 1024), lower texture size or decimation target, close other GPU "
+                "apps, then restart the app if needed."
             )
         return RuntimeError(message)
 

@@ -6,7 +6,7 @@ Trellis Local Studio is image-to-3D only. It uses existing user-provided images 
 
 - What it does: queues one image for TRELLIS.2 generation and GLB export.
 - What it does not do: it does not create, edit, or synthesize the input image.
-- Controls: primary image upload, preset, advanced export options, output basename.
+- Controls: primary image upload, preset, generation resolution, advanced export options, output basename.
 - Backend files: `app/main.py`, `app/jobs/worker.py`, `app/engine/trellis_engine.py`.
 - Limitation: full generation requires a CUDA TRELLIS.2 environment and model weights.
 
@@ -28,18 +28,23 @@ Trellis Local Studio is image-to-3D only. It uses existing user-provided images 
 
 ## Quality Presets
 
-- Draft / Fast: 250k decimation target, 2048 texture, preview off.
-- Balanced: 1M decimation target, 4096 texture, preview on.
-- High Quality: 2M decimation target, 4096 texture, preview on.
-- Experimental / Max: 4M decimation target, 8192 texture, preview on.
-- Custom: manual advanced settings.
+Presets map to official TRELLIS.2 **generation resolution** plus GLB export settings:
 
-Backend file: `app/engine/export_options.py`.
+- Draft / Fast: **512** generation, 250k decimation target, 2048 texture, preview off.
+- Balanced: **1024 cascade** generation, 1M decimation target, 4096 texture, preview on.
+- High Quality: **1536 cascade** generation, 2M decimation target, 4096 texture, preview on.
+- Experimental / Max: **1536 cascade** generation, 4M decimation target, 8192 texture, preview on.
+- Custom: manual generation and export settings.
+
+Generation resolution (`512`, `1024`, `1536`) controls mesh detail during inference. Texture size and decimation target control the exported GLB only.
+
+Backend files: `app/engine/export_options.py`, `app/engine/trellis_engine.py`.
 
 ## Advanced Export Options
 
 Implemented controls:
 
+- pipeline_resolution (512 / 1024 / 1536)
 - decimation_target
 - texture_size
 - remesh
